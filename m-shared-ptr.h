@@ -1452,14 +1452,14 @@ M_IF_METHOD(OUT_SERIAL, oplist)(                                              \
     {                                                                         \
         m_serial_local_t local;                                               \
         m_volatile m_serial_return_code_t r;                                  \
-        r = serial->m_interface->write_array_start(local, serial, (size_t)(out != NULL)); \
+        r = serial->m_interface->write_array_start M_R(local, serial, (size_t)(out != NULL)); \
         if (out != NULL) {                                                    \
             M_F(name, _read_lock)(out);                                       \
             M_ON_EXCEPTION( M_F(name, _read_unlock)(out) )                    \
                 r |= M_CALL_OUT_SERIAL(oplist, serial, out->data);            \
             M_F(name, _read_unlock)(out);                                     \
         }                                                                     \
-        r |= serial->m_interface->write_array_end(local, serial);             \
+        r |= serial->m_interface->write_array_end M_R(local, serial);         \
         return r & M_SERIAL_FAIL;                                             \
     }                                                                         \
 , )                                                                           \
