@@ -130,6 +130,9 @@ static void test_string(void)
     shared_string_t *p2 = shared_string_clone(p);
     assert(p2 != p);
     assert(shared_string_equal_p(p2, p));
+    shared_string_t *p3 = shared_string_clone(NULL);
+    assert(p3 == NULL);
+    assert(shared_string_equal_p(p3, NULL));
     bool b = shared_string_empty_p(p);
     assert(b);
     shared_string_clear(p);
@@ -164,6 +167,10 @@ static void test_string(void)
     shared_string_push(p2, 'X');
     u = 0;
     int res = shared_string_for_each(p2, str_callback, (void*) &u);
+    assert(res == 0);
+    assert(u == 2* 'X');
+    u = 0;
+    res = shared_string_r_for_each(p2, str_callback, (void*) &u);
     assert(res == 0);
     assert(u == 2* 'X');
     res = shared_string_for_each(p2, str_callback2, (void*) &u);
@@ -211,6 +218,26 @@ static void test_string_io(void)
   assert (shared_string_equal_p (p, q));
   fclose(f);
 
+  f = m_core_fopen ("a-mshared-ptr.dat", "wt");
+  if (!f) abort();
+  fprintf(f, "\"help\"]");
+  fclose (f);
+  f = m_core_fopen ("a-mshared-ptr.dat", "rt");
+  if (!f) abort();
+  b = shared_string_in_str (&p, f);
+  assert (b == false);
+  fclose(f);
+
+  f = m_core_fopen ("a-mshared-ptr.dat", "wt");
+  if (!f) abort();
+  fprintf(f, "[\"help\"");
+  fclose (f);
+  f = m_core_fopen ("a-mshared-ptr.dat", "rt");
+  if (!f) abort();
+  b = shared_string_in_str (&p, f);
+  assert (b == false);
+  fclose(f);
+
   shared_string_reset(p);
   M_LET(str, STRING_OPLIST) {
     shared_string_get_str(str, q, false);
@@ -220,6 +247,26 @@ static void test_string_io(void)
     assert(b);
     assert(*sp == 0);
     assert(shared_string_equal_p(p, q));
+
+    string_set_str (str, "\"Hello world\"]");
+    b = shared_string_parse_str(&p, string_get_cstr(str), &sp);
+    assert(!b);
+    assert(*sp == '\"');
+
+    string_set_str (str, "{\"Hello world\"]");
+    b = shared_string_parse_str(&p, string_get_cstr(str), &sp);
+    assert(!b);
+    assert(*sp == '{');
+
+    string_set_str (str, "[\"Hello world\"}");
+    b = shared_string_parse_str(&p, string_get_cstr(str), &sp);
+    assert(!b);
+    assert(*sp == '}');
+
+    string_set_str (str, "[\"Hello world\"");
+    b = shared_string_parse_str(&p, string_get_cstr(str), &sp);
+    assert(!b);
+    assert(*sp == 0);
   }
 
   shared_string_clear(p);
@@ -252,6 +299,10 @@ static void test_string_io(void)
   fclose(f);
 
   // From NULL pointer to non null
+  f = m_core_fopen ("a-mshared-ptr.dat", "wt");
+  if (!f) abort();
+  fprintf(f, "[\"help\"]");
+  fclose (f);
   p = NULL;
   f = m_core_fopen ("a-mshared-ptr.dat", "rt");
   if (!f) abort();
@@ -293,12 +344,7 @@ static void test_string_io(void)
 
 static bool shared_string_equal_str_p(const shared_string_t *p, const char *s)
 {
-  if (p == NULL) {
-    return s == NULL || *s == 0;
-  }
-  if (s == NULL) {
-    return false;
-  }
+  assert(p != NULL || s != NULL);
   shared_string_t *tmp = shared_string_make(s);
   bool b = shared_string_equal_p(p, tmp);
   shared_string_release(tmp);
@@ -339,12 +385,8 @@ static void test_array_shared_string(void)
   array_shared_string_clear(a);
 }
 
-// TEST WITH ARRAY
-ARRAY_DEF(array, int)
-// Provide a FULL_P operator
-static inline bool array_full_p(const array_t a) { return array_size(a) >= 10; }
-#define M_OPL_array_t() M_OPEXTEND( ARRAY_OPLIST(array, M_BASIC_OPLIST), SUBTYPE(int), FULL_P(array_full_p) )
-SHARED_PTR_DECL(shared_array, M_OPL_array_t() )
+#define SHARED_PTR_HEADER 2
+#include "test-mshared-ptr.h"
 
 static int callback1(void *data, const int *el)
 {
@@ -486,9 +528,8 @@ static void test_array(void)
     shared_array_release(p);
 }
 
-
-ARRAY_DEF(array_str, string_t)
-SHARED_PTR_DECL(shared_array_str, ARRAY_OPLIST(array_str, M_STRING_OPLIST))
+#define SHARED_PTR_HEADER 3
+#include "test-mshared-ptr.h"
 
 static void test_array_string(void)
 {
@@ -523,28 +564,8 @@ static void test_array_string(void)
     shared_array_str_release(p);
 }
 
-// TEST WITH LIST
-LIST_DEF(list, float)
-#define M_OPL_list_t() LIST_OPLIST(list, M_BASIC_OPLIST)
-SHARED_WEAK_PTR_DECL(shared_list, M_OPL_list_t())
-SHARED_WEAK_PTR_DEF_EXTERN(shared_list, list_t)
-
-LIST_DUAL_PUSH_DEF(list2, int)
-SHARED_WEAK_PTR_DEF(shared_list2, list2_t, LIST_OPLIST(list2))
-
-
-// TEST WITH DICT
-DICT_DEF2(dict, float, float)
-#define M_OPL_dict_t() DICT_OPLIST(dict, M_BASIC_OPLIST, M_BASIC_OPLIST)
-SHARED_WEAK_PTR_DECL_AS(shared_dict, shared_dict_t, M_OPL_dict_t())
-SHARED_WEAK_PTR_DEF_EXTERN_AS(shared_dict, shared_dict_t, dict_t)
-
-DICT_DEF2(string_pool, string_t, string_t)
-#define M_OPL_string_pool_t() DICT_OPLIST(string_pool, STRING_OPLIST, STRING_OPLIST)
-SHARED_PTR_DEF(string_pool_ts, string_pool_t, M_OPL_string_pool_t() )
-
-DICT_SET_DEF(dict2, int)
-SHARED_PTR_DEF(shared_dict2, dict2_t, DICT_SET_OPLIST(dict2))
+#define SHARED_PTR_HEADER 4
+#include "test-mshared-ptr.h"
 
 /* OA dict needs more operators than the default ones to work */
 static inline bool int_oor_equal_p(int s, unsigned char n)
@@ -628,6 +649,7 @@ START_COVERAGE
 SHARED_PTR_DEF_EXTERN(shared_string, string_t, STR_OPL)
 END_COVERAGE
 // Non measured code
+#define SHARED_PTR_HEADER 1
 #include "test-mshared-ptr.h"
 
 static void test_string2(void)
@@ -664,6 +686,15 @@ static void test_string2(void)
   assert(shared_string_equal_p(p, q));
   shared_string_div(p, q, r);
   assert(shared_string_equal_p(p, q));
+
+  shared_string_remake(p, "2");
+  shared_string_add(q, r, p);
+  assert(shared_string_equal_p(q, rr));
+
+  shared_string_remake(q, "1");
+  shared_string_add(r, p, q);
+  assert(shared_string_equal_p(r, rr));
+
   shared_string_reset(p);
   shared_string_release(p);
   shared_string_release(q);
@@ -711,8 +742,6 @@ static void test_string_NULL(void)
 
   r = shared_string_r_for_each( p, str_callback, NULL);  // should not crash
   assert(r == 0);
-
-  // _apply and _r_apply with NULL are tested with another type
 
   shared_string_release(p);  // should not crash
 
