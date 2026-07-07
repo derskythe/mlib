@@ -687,11 +687,42 @@ static void test_string2(void)
   shared_string_div(p, q, r);
   assert(shared_string_equal_p(p, q));
 
+  // Testing different combinatories for checking the good lock of the mutex.
   shared_string_remake(p, "2");
   shared_string_add(q, r, p);
   assert(shared_string_equal_p(q, rr));
 
+  shared_string_remake(q, "2");
+  shared_string_add(q, r, q);
+  assert(shared_string_equal_p(q, rr));
+
+  shared_string_remake(r, "2");
   shared_string_remake(q, "1");
+  shared_string_add(r, q, r);
+  assert(shared_string_equal_p(r, rr));
+
+  shared_string_remake(r, "2");
+  shared_string_remake(q, "1");
+  shared_string_add(r, r, q);
+  assert(shared_string_equal_p(r, rr));
+
+  shared_string_remake(r, "2");
+  shared_string_remake(q, "1");
+  shared_string_add(q, q, r);
+  assert(shared_string_equal_p(q, rr));
+
+  shared_string_remake(q, "1");
+  shared_string_add(r, q, q);
+  shared_string_remake(q, "2");
+  assert(shared_string_equal_p(r, q));
+
+  shared_string_remake(r, "2");
+  shared_string_add(q, r, r);
+  shared_string_remake(r, "4");
+  assert(shared_string_equal_p(q, r));
+
+  shared_string_remake(q, "1");
+  shared_string_remake(p, "2");
   shared_string_add(r, p, q);
   assert(shared_string_equal_p(r, rr));
 
@@ -755,14 +786,14 @@ static void test_string_NULL(void)
 static void conso_thread1_string(void *p)
 {
   shared_string_t *ptr = (shared_string_t*) p;
-  bool tmp[MAX_NUM] = {0};
+  m_string_unicode_t j;
   for(int i = 1; i < MAX_NUM; i++) {
-    m_string_unicode_t j;
     shared_string_pop(&j, ptr);
+    // Not a FIFO, but a STACK, so we can only check that the value is in the range.
     assert (j > 0 && j < MAX_NUM);
-    assert(tmp[j] == false);
-    tmp[j] = true;
   }
+  shared_string_pop(&j, ptr);
+  assert(j == 1012);
   shared_string_release(ptr);
 }
 
@@ -774,6 +805,8 @@ static void test_thread1_string(void)
   for(int i = 1; i < MAX_NUM; i++) {
     shared_string_push (ptr, (m_string_unicode_t) i);
   }
+  m_thread_sleep(100000); // Give some time to the consumer to consume the whole loop of data.
+  shared_string_push (ptr, (m_string_unicode_t) 1012);
   shared_string_release(ptr);
   m_thread_join(idx);
 }
