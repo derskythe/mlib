@@ -3,7 +3,7 @@
 %global debug_package %{nil}
 
 Name: m-lib
-Version: 0.8.0
+Version: 0.8.2
 Release: 1%{?dist}
 Summary: Type-safe containers for C language
 URL: https://github.com/P-p-H-d/mlib

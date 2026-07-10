@@ -35,7 +35,7 @@ INSTALL_DOCS=yes
 
 # Package name & version.
 PACKAGE=m-lib-$(VERSION)
-VERSION=0.8.1
+VERSION=0.8.2
 
 # Define the contain of the distribution tarball
 HEADER=m-algo.h m-array.h m-atomic.h m-bitset.h m-bptree.h m-buffer.h m-core.h m-deque.h m-dict.h m-funcobj.h m-generic.h m-genint.h m-i-list.h m-list.h m-thread.h m-prioqueue.h m-rbtree.h m-serial-bin.h m-serial-json.h m-snapshot.h m-string.h m-tree.h m-try.h m-tuple.h m-variant.h m-worker.h m-bstring.h m-shared-ptr.h m-queue.h
@@ -100,6 +100,7 @@ distcheck: dist
 
 versioncheck:
 	@if test "$(VERSION)." != `grep M_CORE_VERSION m-core.h |awk '{printf "%d.",$$3 } END {printf "\n"}'` ; then echo "ERROR: Version mismatch between Makefile & HEADERS" ; exit 2 ; fi
+	@if test "$(VERSION)" != `grep "Version:" m-lib.spec |awk '{printf $$2 }'` ; then echo "ERROR: Version mismatch between Makefile & m-lib.spec" ; exit 2 ; fi
 	@for i in *.h ; do echo $(HEADER) | grep -q $$i ; if test $$? -ne 0 ; then echo "ERROR: Missing header $$i in Makefile" ; exit 3 ; fi ; done
 	@for i in doc/* ; do echo $(DOC2) | grep -q $$i ; if test $$? -ne 0 ; then echo "ERROR: Missing document $$i in Makefile" ; exit 4 ; fi ; done
 	@for i in tests/*.c tests/*.txt tests/*.h ; do echo $(TEST) | grep -q $$i ; if test $$? -ne 0 ; then echo "ERROR: Missing test $$i in Makefile" ; exit 5 ; fi ; done
