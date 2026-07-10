@@ -34,7 +34,7 @@ DESTDIR=
 INSTALL_DOCS=yes
 
 # Package name & version.
-PACKAGE=m_lib-$(VERSION)
+PACKAGE=m-lib-$(VERSION)
 VERSION=0.8.1
 
 # Define the contain of the distribution tarball
@@ -68,8 +68,8 @@ clean:
 	cd tests && $(MAKE) clean
 	cd example && $(MAKE) clean
 	$(RM) README.html depend.dot
-	$(RM) -r 'm_lib-$(VERSION)'
-	$(RM) 'm_lib-$(VERSION).tar.bz2'
+	$(RM) -r '$(PACKAGE)'
+	$(RM) '$(PACKAGE).tar.bz2'
 	$(RM) m-lib.pc
 
 distclean: clean
@@ -120,6 +120,11 @@ install:
 uninstall:
 	for i in $(HEADER) ; do $(RM) $(DESTDIR)$(PREFIX)/include/m-lib/$$i ; done
 	$(RMDIR) $(DESTDIR)$(PREFIX)/include/m-lib/
+	$(RM) $(DESTDIR)$(PREFIX)/share/pkgconfig/m-lib.pc
+	if test "$(INSTALL_DOCS)" = "yes" ; then \
+		for i in $(DOC1) ; do $(RM) $(DESTDIR)$(PREFIX)/share/doc/m-lib/$$i ; done ; \
+		$(RMDIR) $(DESTDIR)$(PREFIX)/share/doc/m-lib/ ; \
+	fi
 
 format:
 	cd example && $(MAKE) ex-string01.exe
