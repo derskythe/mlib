@@ -551,7 +551,7 @@ static void test_array_string(void)
     b = shared_array_str_try_emplace(NULL, " ");
     assert(!b);
     string_init_set_str(tmp, "!");
-    b = shared_array_str_try_push_move(NULL, &tmp); // tmp is still alive
+    b = shared_array_str_try_push_move(NULL, &tmp); // tmp is still alive since push_move failed
     assert(!b);
     string_clear(tmp);
     b = shared_array_str_try_pop_move(&tmp, NULL); // tmp is not initialized
@@ -560,6 +560,35 @@ static void test_array_string(void)
     string_init_set_str(tmp, "!");
     b = shared_array_str_try_push_move(p, &tmp); // No need to clear tmp
     assert(b);
+
+    string_t tmp2;
+    b = shared_array_str_try_pop_move(&tmp2, p); // Init tmp2
+    assert(b);
+    assert(string_equal_str_p(tmp2, "!"));
+    string_clear(tmp2);
+
+    b = shared_array_str_try_pop_move(&tmp2, p); // Init tmp2
+    assert(b);
+    assert(string_equal_str_p(tmp2, " "));
+    string_clear(tmp2);
+
+    b = shared_array_str_try_pop_move(&tmp2, p); // Init tmp2
+    assert(b);
+    assert(string_equal_str_p(tmp2, "!"));
+    string_clear(tmp2);
+
+    b = shared_array_str_try_pop_move(&tmp2, p); // Init tmp2
+    assert(b);
+    assert(string_equal_str_p(tmp2, "World"));
+    string_clear(tmp2);
+
+    b = shared_array_str_try_pop_move(&tmp2, p); // Init tmp2
+    assert(b);
+    assert(string_equal_str_p(tmp2, "Hello"));
+    string_clear(tmp2);
+
+    b = shared_array_str_try_pop_move(&tmp2, p); // tmp2 is not initialized since pop_move failed
+    assert(!b);
 
     shared_array_str_release(p);
 }
