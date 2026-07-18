@@ -91,6 +91,7 @@ static void test1(void)
   for(int i = 1; i < 51; i ++) {
     assert (bitset_get(set2, (size_t) i) == M_ASSIGN_CAST(bool, (i-1)%2));
   }
+
   // Push from not aligned bit
   bitset_push_at(set2, 9, 1);
   for(int i = 1; i < 9; i ++) {
@@ -101,7 +102,19 @@ static void test1(void)
     assert (bitset_get(set2, (size_t) i) == M_ASSIGN_CAST(bool, i%2));
   }
 
+  // Push from over 32
+  bitset_push_at(set2, 34, 1);
+  for(int i = 10; i < 34; i ++) {
+    assert (bitset_get(set2, (size_t) i) == M_ASSIGN_CAST(bool, i%2));
+  }
+  assert (bitset_get(set2, 34) == 1);
+  for(int i = 35; i < 53; i ++) {
+    assert (bitset_get(set2, (size_t) i) == M_ASSIGN_CAST(bool, (i+1)%2));
+  }
   bool b;
+  bitset_pop_at(&b, set2, 34);
+  assert(b == 1);
+
   bitset_pop_back(NULL, set2);
   bitset_pop_back(&b, set2);
   assert(b == false);
