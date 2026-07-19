@@ -1,4 +1,4 @@
-#if HAVE_GMP
+#if HAVE_GMP && ((defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L) || defined(__GNUC__))
 
 #include <stdio.h>
 #include <gmp.h>
@@ -117,5 +117,10 @@ int main(void) {
 }
 
 #else
-int main(void) {}
+#include <stdio.h>
+int main(void)
+{
+    fprintf(stderr, "Error: GMP and C23 or GCC is required to compile this test\n");
+    return 1;
+}
 #endif
