@@ -1,4 +1,5 @@
-#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L) || defined(__GNUC__)
+#include "m-core.h"
+#if defined(m_typeof)
 
 #include "m-list.h"
 #include "m-generic.h"
@@ -47,7 +48,7 @@ int main(void)
 #include <stdio.h>
 int main(void)
 {
-    fprintf(stderr, "Error: C23 or GCC is required to compile this test\n");
+    fprintf(stderr, "Error: C23 or supported compiler is required to compile this test\n");
     return 1;
 }
 
