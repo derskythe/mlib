@@ -389,21 +389,29 @@ M_N(void, name, _init, buffer_t v, size_t size)                               \
  M_F(name, _empty_p)(const buffer_t v)                                        \
  {                                                                            \
    M_BUFF3R_CONTRACT(v,m_size);                                               \
+  /* un-const 'v', so that we can lock it (semantically it is const) */       \
+   M_F(name, _uptr_ct) vu;                                                    \
+   vu.cptr = v;                                                               \
+   M_F(name, _ptr) u = vu.ptr;                                                \
    /* If the buffer has been configured with deferred pop                     \
       we considered the queue as empty when the number of                     \
       deferred pop has reached 0, not the number of items in the              \
       buffer is 0. */                                                         \
    if (M_BUFF3R_POLICY_P(policy, M_BUFFER_DEFERRED_POP))                      \
-     return atomic_load_explicit (&v->number[1], memory_order_relaxed) == 0;  \
+     return atomic_load_explicit (&u->number[1], memory_order_relaxed) == 0;  \
    else                                                                       \
-     return atomic_load_explicit (&v->number[0], memory_order_relaxed) == 0;  \
+     return atomic_load_explicit (&u->number[0], memory_order_relaxed) == 0;  \
  }                                                                            \
                                                                               \
  M_INLINE bool                                                                \
  M_F(name, _full_p)(const buffer_t v)                                         \
  {                                                                            \
    M_BUFF3R_CONTRACT(v,m_size);                                               \
-   return atomic_load_explicit (&v->number[0], memory_order_relaxed)          \
+  /* un-const 'v', so that we can lock it (semantically it is const) */       \
+   M_F(name, _uptr_ct) vu;                                                    \
+   vu.cptr = v;                                                               \
+   M_F(name, _ptr) u = vu.ptr;                                                \
+   return atomic_load_explicit (&u->number[0], memory_order_relaxed)          \
      == M_BUFF3R_SIZE(m_size);                                                \
  }                                                                            \
                                                                               \
@@ -411,7 +419,11 @@ M_N(void, name, _init, buffer_t v, size_t size)                               \
  M_F(name, _size)(const buffer_t v)                                           \
  {                                                                            \
    M_BUFF3R_CONTRACT(v,m_size);                                               \
-   return atomic_load_explicit (&v->number[0], memory_order_relaxed);         \
+  /* un-const 'v', so that we can lock it (semantically it is const) */       \
+   M_F(name, _uptr_ct) vu;                                                    \
+   vu.cptr = v;                                                               \
+   M_F(name, _ptr) u = vu.ptr;                                                \
+   return atomic_load_explicit (&u->number[0], memory_order_relaxed);         \
  }                                                                            \
                                                                               \
  M_N(bool, name, _push_blocking, buffer_t v, type const data, bool blocking)  \
