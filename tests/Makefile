@@ -45,7 +45,7 @@ all:
 .POSIX:
 .PHONY: scan-build sanitize check clean *.log coverage synthesis.synt
 .SUFFIXES:
-.SUFFIXES: .c .exe .log .depend .gcov .analyzer .cpp .fuzz
+.SUFFIXES: .c .exe .log .gcov .analyzer .cpp .fuzz
 .SECONDARY:
 
 .c.exe:
@@ -53,12 +53,6 @@ all:
 
 .cpp.exe:
 	$(CXX) $(WCFLAGS_CPP) -Wno-sign-conversion -Wno-inline $(XCFLAGS) $(CPPFLAGS) -g $< -o $@ $(LDFLAGS)
-
-.c.depend:
-	$(CC) $(CPPFLAGS) -MM -MT `echo $< |$(SED) 's/\.c/\.exe/g'` $< > $@
-
-.cpp.depend:
-	$(CXX) $(CPPFLAGS) -MM -MT `echo $< |$(SED) 's/\.cpp/\.exe/g'` $< > $@
 
 .exe.log:
 	$(LOG_COMPILER) ./$<
@@ -83,14 +77,17 @@ all:
 
 -include depend
 
+# Generate depend without using recursive make call to avoid issue with 'make -B'
 depend:
-	$(RM) depend
-	echo "" > depend
-	$(MAKE) `ls test-*.c|$(SED) 's/\.c/\.depend/g'` `ls except-*.c|$(SED) 's/\.c/\.depend/g'`
-	$(CXX) --version 2> /dev/null && $(MAKE) `ls check-*.cpp|$(SED) 's/\.cpp/\.depend/g'` || echo "Skip C++ tests"
-	cat *.depend > depend
-	$(RM) *.depend
-
+	@echo "" > depend
+	for f in test-*.c except-*.c; do 						\
+		$(CC) $(CPPFLAGS) -MM -MT `echo $$f |$(SED) 's/\.c/\.exe/g'` $$f >> depend; 		\
+	done
+	if $(CXX) --version >/dev/null 2>&1; then 					\
+		for f in check-*.cpp; do 						\
+			$(CXX) $(CPPFLAGS) -MM -MT `echo $$f |$(SED) 's/\.cpp/\.exe/g'` $$f >> depend ; 	\
+		done; 									\
+	fi
 
 #####################################################################################################
 # Main target
