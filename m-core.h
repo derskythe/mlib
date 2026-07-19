@@ -4291,7 +4291,7 @@ M_INLINE size_t m_core_cstr_hash(const char str[])
                   M_LIB_NOT_SAME_TYPE,                                        \
                   "The variable " M_AS_STR(a) " and " M_AS_STR(b)             \
                   " are not of same type.")
-#elif defined(m_typeof)
+#elif defined(m_typeof) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #define M_CHECK_SAME(a, b)                                                    \
   M_STATIC_ASSERT(_Generic(&a, m_typeof(b)*: 1, default: 0),                  \
                   M_LIB_NOT_SAME_TYPE,                                        \
