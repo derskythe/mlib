@@ -4287,7 +4287,7 @@ M_INLINE size_t m_core_cstr_hash(const char str[])
 #define M_CHECK_SAME(a, b) (void)0
 #elif defined(__GNUC__) && !defined(__cplusplus)
 #define M_CHECK_SAME(a, b)                                                    \
-  M_STATIC_ASSERT(__builtin_types_compatible_p(m_typeof(a), m_typeof(b)),     \
+  M_STATIC_ASSERT(__builtin_types_compatible_p(m_typeof(((void)0,a)), m_typeof(((void)0,b))), \
                   M_LIB_NOT_SAME_TYPE,                                        \
                   "The variable " M_AS_STR(a) " and " M_AS_STR(b)             \
                   " are not of same type.")
