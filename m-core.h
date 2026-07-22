@@ -157,9 +157,9 @@
    Otherwise we use some extensions of the compilers. */
 #ifdef _MSC_VER
 #define m_typeof(x) decltype(x)
-#elif defined(__GNUC__)   
+#elif defined(__GNUC__) || defined(__clang__) || defined(__TINYC__) || defined(__slimcc__)
 #define m_typeof(x) __typeof__(x)
-#else
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L
 #define m_typeof(x) typeof(x)
 #endif
 
@@ -4287,13 +4287,13 @@ M_INLINE size_t m_core_cstr_hash(const char str[])
 #define M_CHECK_SAME(a, b) (void)0
 #elif defined(__GNUC__) && !defined(__cplusplus)
 #define M_CHECK_SAME(a, b)                                                    \
-  M_STATIC_ASSERT(__builtin_types_compatible_p(m_typeof(a), m_typeof(b)),     \
+  M_STATIC_ASSERT(__builtin_types_compatible_p(m_typeof(((void)0,a)), m_typeof(((void)0,b))), \
                   M_LIB_NOT_SAME_TYPE,                                        \
                   "The variable " M_AS_STR(a) " and " M_AS_STR(b)             \
                   " are not of same type.")
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202000L
+#elif defined(m_typeof) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #define M_CHECK_SAME(a, b)                                                    \
-  M_STATIC_ASSERT(_Generic(&a, m_typeof(b)*: 1, default: 0),                  \
+  M_STATIC_ASSERT(_Generic((0,a), m_typeof((0,b)): 1, default: 0),            \
                   M_LIB_NOT_SAME_TYPE,                                        \
                   "The variable " M_AS_STR(a) " and " M_AS_STR(b)             \
                   " are not of same type.")
